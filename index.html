@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title></title>
+
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.8/js/esri/css/esri.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <script>
+      var dojoConfig = {
+        paths: {
+          plugins: location.pathname.replace(/\/[^/]+$/, "") + "/plugins",
+          queue: "http://d3js.org/queue.v1.min"
+        }
+      };
+    </script>
+
+    <style>
+      html,body {
+        width:100%;
+        height:100%;
+        margin: 0;
+        padding: 0px 0 0 0;
+        font-family: 'Open Sans', sans-serif;
+      }
+
+      #mapCanvas {
+        padding:0;
+      }
+
+      .footer-container {
+        width: 85%;
+        overflow: hidden;
+        position: relative;
+        margin: auto;
+      }
+      .blurb {
+        font-size:0.8em;
+      }
+      .emph {
+        font-size: 1.2em;
+        font-weight: 800;
+      }
+      #footer {
+        background: #ecf0f1;
+        padding:10px;
+        height:320px;
+      }
+
+      .float-left {
+        float:left;
+        overflow: hidden;
+        position: relative;
+        height:100%;
+      }
+
+      .footer-left {
+        width:30%;
+      }
+
+      .footer-right {
+        width: 45%;
+      }
+
+      #slider-container {
+        width: 98%;
+        pointer-events: none;
+        margin: auto;
+        margin-top:15px;
+        margin-bottom:15px;
+      }
+
+      #slider {
+        width:100%;
+        pointer-events:auto;
+      }
+
+      #date-range {
+        width:100%;
+        text-align: center;
+      }
+      .date {
+        font-size:1.0em;
+      }
+      #title {
+        pointer-events:none;
+        font-size:1.1em;
+      }
+
+
+
+      .horz-bars {
+          width: 435px;
+      }
+      .horz-bars ul {
+          list-style-type: none;
+          padding: 0;
+      }
+      /* Chart title and x-axis title */
+      .horz-bars h2, .horz-bars p {
+          text-align: center;
+      }
+      .horz-bars .labels, .horz-bars .data {
+          float: left;
+          margin-bottom: -12px;
+      }
+      .horz-bars .labels li, .horz-bars .data li {
+          font-size: 9pt;
+          height: 26px;
+          margin: 5px 0;
+      }
+      /* Category labels */
+      .horz-bars .labels {
+          text-align: right;
+          padding: 5px 10px 0 0;
+          width: 170px;
+      }
+      /* Graph area */
+      .horz-bars .data {
+        /*background: linear-gradient(to right, transparent 29px, #ccc 1px);*/
+        background-size: 30px 100%;
+        border-left: 1px solid #aaa;
+        width: 200px;
+      }
+      .horz-bars .bar {
+          background: #f20;
+          float: left;
+          height: 26px;
+          width: 0;
+      }
+      .horz-bars .value {
+          float: left;
+          padding: 13px 5px;
+      }
+      /* X-axis line labels */
+      .horz-bars .line-labels {
+          clear: left;
+          font-size: 9pt;
+          margin: 0 0 10px 70px;
+      }
+      .horz-bars .line-labels span {
+          margin-right: 13px;
+      }
+
+      /*.hist-label {
+        float: left;
+        clear: both;
+        font-size: 0.7em;
+        margin: 2px 5px 2px 0;
+      }
+      .hist-item {
+        height: 26px;
+        pointer-events:auto;
+        cursor:pointer;
+      }*/
+      .hist-item.disabled {
+        background:#B3B3B3 !important;
+      }
+
+      #hist-1 {
+        /*left:0px;*/
+        background:rgb(255,255,178);
+      }
+      #hist-2 {
+        /*left:45px;*/
+        background:rgb(254,217,118);
+      }
+      #hist-3 {
+        /*left:90px;*/
+        background:rgb(254,178,76);
+      }
+      #hist-4 {
+        /*left:135px;*/
+        background:rgb(253,141,60);
+      }
+      #hist-5 {
+        /*left:180px;*/
+        background:rgb(240,59,32);
+      }
+      #hist-6 {
+        /*left:225px;*/
+        background:rgb(189,0,38);
+      }
+
+      /*.leg-icon {
+        border-radius: 20px;
+        margin-right:3px;
+        display: inline-block;
+        width:10px;
+        height:10px;
+      }*/
+
+      #f0 {
+        background:rgb(255,255,178);
+        width:3px;
+        height:3px;
+      }
+      #f1 {
+        background:rgb(254,217,118);
+        width:4px;
+        height:4px;
+      }
+      #f2 {
+        background:rgb(254,178,76);
+        width:6px;
+        height:6px;
+      }
+      #f3 {
+        background:rgb(253,141,60);
+        width:7px;
+        height:7px;
+      }
+      #f4 {
+        background:rgb(240,59,32);
+        width:8px;
+        height:8px;
+      }
+      #f5 {
+        background:rgb(189,0,38);
+      }
+
+      .ui-slider-handle.ui-state-default.ui-corner-all {
+        background-color: #FFF;
+      }
+
+      .ui-slider-horizontal .ui-slider-handle {
+        top: -.3em;
+        margin-left: -0.3em;
+      }
+
+      .ui-widget-content .ui-state-hover, .ui-state-hover, .ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active, .ui-widget-header .ui-state-hover, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+        color:#555;
+        border: 1px solid #2c3e50;
+        background-color: #FFF;
+      }
+
+      .ui-widget-header {
+        background:#2980b9;
+      }
+
+      .ui-slider-horizontal {
+        height: .1em;
+      }
+
+      .ui-slider .ui-slider-handle {
+        width: 0.5em;
+        height: 0.5em;
+        cursor: pointer;
+      }
+
+      .ui-slider-horizontal .ui-slider-handle {
+        top: -0.2em;
+      }
+
+      .ui-corner-all {
+        border-radius: 20px !important;
+      }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="vendor/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.8.0/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script src="//js.arcgis.com/3.12compact/"></script>
+
+    <script>
+      var map, rasterLayer;
+      var canvasSupport;
+
+      require([
+        "esri/map",
+        "dojo/dom",
+        "plugins/TileCubeLayer",
+        "esri/layers/WebTiledLayer",
+        "dojo/domReady!"
+      ], function(
+        Map,
+        dom,
+        TileCubeLayer,
+        WebTiledLayer
+      ){
+
+        var types = {
+          "ARSON": 0,
+          "ASSAULT W/DANGEROUS WEAPON": 1,
+          "BURGLARY": 2,
+          "MOTOR VEHICLE THEFT": 3,
+          "ROBBERY": 4,
+          "THEFT F/AUTO": 5,
+          "THEFT/OTHER": 6
+        }
+
+        var reverseTypes = [];
+        for( var i in types) {
+          console.log("i", i)
+          reverseTypes[types[i]] = i;
+        }
+
+        var height = $(window).height() - 260;
+        $('#mapCanvas').css({"height": height + "px"});
+
+        // does the browser support canvas?
+        canvasSupport = supports_canvas();
+
+        var tiles = new WebTiledLayer("http://{s}.basemaps.cartocdn.com/dark_nolabels/${level}/${col}/${row}.png");
+        //http://d.tile.stamen.com/terrain/12/656/1583.jpg
+
+        map = new Map("mapCanvas", {
+          center: [-77.05, 38.9],
+          zoom: 11,
+          maxZoom: 18,
+          minZoom: 10,
+          basemap: "dark-gray",
+          smartNavigation: false
+        });
+
+        //map.addLayer(tiles);
+
+        map.on("load", mapLoaded);
+
+        function mapLoaded() {
+
+          map.disableScrollWheelZoom();
+
+          // Add raster layer
+          if ( canvasSupport ) {
+            layer = new TileCubeLayer('dccrime/{level}/{col}/{row}.json', {
+              tileType: 'canvas',
+              hidpi: false,
+              temporal: true,
+              startTime: 0,
+              endTime: 300,
+              cumulative: true,
+              style: function(val) {
+                var color;
+                val = types[val]
+                switch(true) {
+                  case val === 0:
+                    color ='rgb(255,255,178)';
+                    break;
+                  case val === 1:
+                    color ='rgb(254,217,118)';
+                    break;
+                  case val === 2:
+                    color ='rgb(254,178,76)';
+                    break;
+                  case val === 3:
+                    color ='rgb(253,141,60)';
+                    break;
+                  case val === 4:
+                    color ='rgb(240,59,32)';
+                    break;
+                  case val === 5:
+                    color ='rgb(189,0,38)';
+                    break;
+                  default:
+                    color ='rgb(250,250,250)';
+                }
+                return {
+                  fillStyle: color,
+                  radius: 5
+                };
+              }
+            });
+
+            layer.on("tiles-loaded", function(){
+              updateHistogram(layer);
+            });
+
+            map.on('extent-change', function() {
+              updateHistogram(layer);
+            });
+
+            // Tiles loaded may not call if no tiles for an area
+            setTimeout(function() {updateHistogram(layer) }, 1000)
+
+            map.addLayer(layer);
+
+            var endDate = moment('JAN 01, 2016').add(150, 'days').format('MMM DD, YYYY');
+            $('#end-date').html(endDate);
+
+            function updateHistogram(layer) {
+              var data = layer._tileData;
+              var startIndex = layer.startTime;
+              var endIndex = layer.endTime;
+              var histogram = {};
+              for ( var tile in data ) {
+                if (dom.byId(tile)) {
+                  var hist = data[tile].histograms;
+                  for ( var val in hist ) {
+                    val = parseInt(val);
+                    if ( val >= startIndex && val <= endIndex ) {
+                      for ( var i in hist[val] ) {
+                        if ( histogram[i] ) {
+                          histogram[i] += hist[val][i];
+                        } else {
+                          histogram[i] = hist[val][i];
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+              var max = _.max(histogram);
+              for ( var item in types ) {
+                console.log("Draw Histogram", item, histogram[item])
+                var index = types[item];
+                var percent = 0;
+                var value = 0
+                if(histogram[item] !== undefined) {
+                  value = histogram[item]
+                  percent = (value / max) * 80;
+                }
+                $('.hist-value')[index].innerText = value;
+                $($('.hist-item')[index]).css({'width': percent + '%'});
+              }
+
+            }
+
+            $( "#slider" ).slider({
+              range: true,
+              min: 0,
+              max: 300,
+              values: [ 0, 150 ],
+              slide: function( event, ui ) {
+                var start = parseInt(ui.values[ 0 ]);
+                var end = parseInt(ui.values[ 1 ]);
+                var startDate = moment('JAN 01, 2016').add(start, 'days').format('MMM DD, YYYY');
+                var endDate = moment('JAN 01, 2016').add(end, 'days').format('MMM DD, YYYY');
+
+                $('#start-date').html(startDate);
+                $('#end-date').html(endDate);
+
+                layer.startTime = start;
+                layer.endTime = end;
+                layer._update();
+                updateHistogram(layer);
+              }
+            });
+
+            $('.hist-item').on('click', function(e) {
+              $(e.target).toggleClass('disabled');
+
+              var id = $(e.target).attr('id').replace(/hist-/g, '');
+              id = reverseTypes[parseInt(id) - 1];
+
+              if ( !layer.disabledValues ) {
+                layer.disabledValues = [];
+              }
+
+              if ( _.includes(layer.disabledValues, id) ) {
+                layer.disabledValues.splice( layer.disabledValues.indexOf(id), 1 );
+              } else {
+                layer.disabledValues.push(id);
+              }
+              console.log("Disabled Values", layer.disabledValues)
+
+              layer._update();
+            });
+
+          } else {
+            dom.byId("mapCanvas").innerHTML = "This browser doesn't support canvas. Visit <a target='_blank' href='http://www.caniuse.com/#search=canvas'>caniuse.com</a> for supported browsers";
+          }
+        }
+
+        // does the browser support canvas?
+        function supports_canvas() {
+          return !!document.createElement("canvas").getContext;
+        }
+
+      });
+    </script>
+  </head>
+
+  <body class="">
+     <div id="mapCanvas"></div>
+     <div id="footer">
+      <div class="footer-container">
+        <div class="footer-left float-left horz-bars">
+          <ul id="legend" class="labels">
+            <li class="leg-item"><span id="f0" class="leg-icon"></span>ARSON</li>
+            <li class="leg-item"><span id="f0" class="leg-icon"></span>ASSAULT W/DANGEROUS WEAPON</li>
+            <li class="leg-item"><span id="f1" class="leg-icon"></span>BURGLARY</li>
+            <li class="leg-item"><span id="f2" class="leg-icon"></span>MOTOR VEHICLE THEFT</li>
+            <li class="leg-item"><span id="f3" class="leg-icon"></span>ROBBERY</li>
+            <li class="leg-item"><span id="f4" class="leg-icon"></span>THEFT F/AUTO</li>
+            <li class="leg-item"><span id="f5" class="leg-icon"></span>THEFT/OTHER</li>
+          </ul>
+
+          <ul id="histogram" class="data">
+            <li><div class="hist-item bar" id="hist-1"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-2"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-3"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-4"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-5"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-6"></div><span class="hist-value"></span></li>
+            <li><div class="hist-item bar" id="hist-7"></div><span class="hist-value"></span></li>
+          </ul>
+        </div>
+        <div class="footer-right float-left">
+          <div id="title">DC Crime - 2016</div>
+          <div class="blurb">
+            The data visualized are from <a href="http://opendata.dc.gov/datasets/bda20763840448b58f8383bae800a843_26">Washington DC Open Data</a>.
+            Data include <span class="emph">13,400 incidents</span> visualized on this map. Click the legend histogram to filter by crime offense.
+          </div>
+            <div id="date-range">
+              <span class="date" id="start-date">Jan 01, 2016</span> to <span class="date" id="end-date"></span>
+            </div>
+            <div id="slider-container">
+              <div id="slider"></div>
+            </div>
+        </div>
+      </div>
+
+     <!--script src="vendor/hidpi-canvas.min.js"></script-->
+  </body>
+
+</html>
