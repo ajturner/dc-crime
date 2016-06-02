@@ -8,7 +8,7 @@ There are two example apps here. The first is a [simple temporal visualization](
 ![](images/temporal.png)
 
 
-The second is a []"crime near me" viewer](http://ajturner.github.io/dc-crime/nearby/index.html) where you can enter an address and see nearby crime incidents as well as demographics and social tapestry.
+The second is a ["crime near me" viewer](http://ajturner.github.io/dc-crime/nearby/index.html) where you can enter an address and see nearby crime incidents as well as demographics and social tapestry.
 
 - [See Nearby Crime](http://ajturner.github.io/dc-crime/nearby/index.html)
 
